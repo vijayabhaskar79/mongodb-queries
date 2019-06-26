@@ -1,0 +1,38 @@
+//Sample collection
+db.grades.insertMany([{ _id: 1, quizzes: [ 1, 2, 3 ] },
+{ _id: 2, quizzes: [ ] },
+{ _id: 3, quizzes: [ 3, 8, 9 ] }])
+
+Need a query to compute sum of products on quizzes.
+	  
+// Sum Of Product
+db.grades.aggregate([
+	{$project :
+		{ "product":
+			{
+				$map : 
+				{ 
+					input : '$quizzes',
+					as : "sum1",
+					in : {$multiply :['$$sum1','$$sum1']}
+				}
+			}
+		}
+	},
+	{$project :
+		{ "SumOfProduct":
+			{ $reduce :
+				{ input : '$product',
+					initialValue: 0,
+				in : {$add :["$$value","$$this"]}
+				}
+			}
+		}
+	}
+]);
+
+//Output 
+
+{"_id":1,"SumOfProduct":14}
+{"_id":2,"SumOfProduct":0}
+{"_id":3,"SumOfProduct":154}

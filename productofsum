@@ -1,0 +1,45 @@
+//Sample collection
+db.grades.insertMany([{ _id: 1, quizzes: [ 1, 2, 3 ] },
+{ _id: 2, quizzes: [ ] },
+{ _id: 3, quizzes: [ 3, 8, 9 ] }])
+
+//Product of Sum query
+db.grades.aggregate(
+   [{$project:
+		{quizzes:
+			{$cond:
+				[{$eq: [{$size: "$quizzes"}, 0]} , [0], "$quizzes"] 
+			} 
+		}
+	},
+
+	{ $project:
+        { sumof:
+            {
+              $map:
+                {
+                   input: "$quizzes",
+                   as: "grade",
+                   in: { $sum :[ "$$grade", "$$grade" ] }
+                }
+            }
+        }
+    },
+	
+	{	$project :
+		{ "productOfSum":
+			{ $reduce :
+				{ input : '$sumof',
+					initialValue: 1,
+				in : {$multiply :["$$value","$$this"]}
+				}
+			}
+		}
+	}	
+	]
+)
+//Output of the above query
+
+{"_id":1,"productOfSum":48}
+{"_id":2,"productOfSum":0}
+{"_id":3,"productOfSum":1728}
